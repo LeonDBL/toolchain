@@ -39,8 +39,13 @@ export LC_ALL=C
 DIR="$ANDROID_BUILD_TOP/external/codefirex"
 SRC="$DIR/src"
 
-# Apply our squashed AOSP ports patch on gcc trunk
+# Ensure the GCC source to be used is in an
+# unpatched state
 cd $SRC/gcc/gcc-$GCC
+git add .
+git reset --hard --quiet
+
+# Apply our squashed AOSP ports patch on GCC trunk
 patch -p1 < "$DIR/gcc-4.9-android.patch"
 cd $DIR
 
