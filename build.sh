@@ -4,7 +4,7 @@
 [ -z "$BINUTILS" ] && BINUTILS=2.23
 [ -z "$CLOOG" ] && CLOOG=0.18.0
 [ -z "$PPL" ] && PPL=1.0
-[ -z "$GCC" ] && GCC=4.9
+[ -z "$GCC" ] && GCC=4.8
 [ -z "$GDB" ] && GDB=linaro-7.6-2013.05
 [ -z "$GMP" ] && GMP=5.1.2
 [ -z "$MPFR" ] && MPFR=3.1.2
@@ -40,13 +40,16 @@ DIR="$ANDROID_BUILD_TOP/external/codefirex"
 SRC="$DIR/src"
 
 # Ensure the GCC source to be used is in an
-# unpatched state
+# unpatched state before we apply our patchset.
 cd $SRC/gcc/gcc-$GCC
 git add .
 git reset --hard --quiet
 
-# Apply our squashed AOSP ports patch on GCC trunk
-patch -p1 < "$DIR/gcc-4.9-android.patch"
+# Apply the fully squashed cfX patchset
+# patch onto the GCC source. The patchset
+# is comprised of AOSP commits and GCC
+# trunk backports.
+patch -p1 < "$DIR/gcc-$GCC-android.patch"
 cd $DIR
 
 mkdir -p $OUT/toolchain_build
