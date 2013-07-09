@@ -4,7 +4,7 @@
 [ -z "$BINUTILS" ] && BINUTILS=2.23
 [ -z "$CLOOG" ] && CLOOG=0.18.0
 [ -z "$PPL" ] && PPL=1.0
-[ -z "$GCC" ] && GCC=4.9
+[ -z "$GCC" ] && GCC=4.8
 [ -z "$GDB" ] && GDB=linaro-7.6-2013.05
 [ -z "$GMP" ] && GMP=5.1.2
 [ -z "$MPFR" ] && MPFR=3.1.2
