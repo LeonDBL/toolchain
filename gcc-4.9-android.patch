@@ -181,7 +181,7 @@ index 5e21a08..96fadeb 100644
  
  /* The ARM uses @ are a comment character so we need to redefine
 diff --git a/gcc/config/arm/linux-eabi.h b/gcc/config/arm/linux-eabi.h
-index cb0aad1..c0e0529 100644
+index cb0aad1..b73b429 100644
 --- a/gcc/config/arm/linux-eabi.h
 +++ b/gcc/config/arm/linux-eabi.h
 @@ -91,15 +91,20 @@
@@ -530,6 +530,78 @@ index 41b64c7..0243bdc 100644
  fi])
  
  AC_MSG_CHECKING(what readelf to use)
+diff --git a/gcc/cp/call.c b/gcc/cp/call.c
+index 425ef9b..1073080 100644
+--- a/gcc/cp/call.c
++++ b/gcc/cp/call.c
+@@ -3952,8 +3952,6 @@ build_operator_new_call (tree fnname, vec<tree, va_gc> **args,
+   if (size_check != NULL_TREE)
+     {
+       tree errval = TYPE_MAX_VALUE (sizetype);
+-      if (cxx_dialect >= cxx11)
+-	errval = throw_bad_array_new_length ();
+       *size = fold_build3 (COND_EXPR, sizetype, size_check,
+ 			   original_size, errval);
+     }
+diff --git a/gcc/cp/cp-tree.h b/gcc/cp/cp-tree.h
+index 1b0b243..0e08e10 100644
+--- a/gcc/cp/cp-tree.h
++++ b/gcc/cp/cp-tree.h
+@@ -5368,7 +5368,6 @@ extern tree build_value_init			(tree, tsubst_flags_t);
+ extern tree build_value_init_noctor		(tree, tsubst_flags_t);
+ extern tree build_offset_ref			(tree, tree, bool,
+ 						 tsubst_flags_t);
+-extern tree throw_bad_array_new_length		(void);
+ extern tree throw_bad_array_length		(void);
+ extern tree build_new				(vec<tree, va_gc> **, tree, tree,
+ 						 vec<tree, va_gc> **, int,
+diff --git a/gcc/cp/init.c b/gcc/cp/init.c
+index 4edd150..43eb942 100644
+--- a/gcc/cp/init.c
++++ b/gcc/cp/init.c
+@@ -2154,21 +2154,6 @@ diagnose_uninitialized_cst_or_ref_member (tree type, bool using_new, bool compla
+   return diagnose_uninitialized_cst_or_ref_member_1 (type, type, using_new, complain);
+ }
+ 
+-/* Call __cxa_bad_array_new_length to indicate that the size calculation
+-   overflowed.  Pretend it returns sizetype so that it plays nicely in the
+-   COND_EXPR.  */
+-
+-tree
+-throw_bad_array_new_length (void)
+-{
+-  tree fn = get_identifier ("__cxa_throw_bad_array_new_length");
+-  if (!get_global_value_if_present (fn, &fn))
+-    fn = push_throw_library_fn (fn, build_function_type_list (sizetype,
+-							      NULL_TREE));
+-
+-  return build_cxx_call (fn, 0, NULL, tf_warning_or_error);
+-}
+-
+ /* Call __cxa_bad_array_length to indicate that there were too many
+    initializers.  */
+ 
+@@ -2486,8 +2471,6 @@ build_new_1 (vec<tree, va_gc> **placement, tree type, tree nelts,
+ 	    }
+ 	  /* Perform the overflow check.  */
+ 	  tree errval = TYPE_MAX_VALUE (sizetype);
+-	  if (cxx_dialect >= cxx11)
+-	    errval = throw_bad_array_new_length ();
+ 	  if (outer_nelts_check != NULL_TREE)
+             size = fold_build3 (COND_EXPR, sizetype, outer_nelts_check,
+                                 size, errval);
+@@ -3471,11 +3454,6 @@ build_vec_init (tree base, tree maxindex, tree init,
+ 	  tree throw_call;
+ 	  if (array_of_runtime_bound_p (atype))
+ 	    throw_call = throw_bad_array_length ();
+-	  else
+-	    throw_call = throw_bad_array_new_length ();
+-	  length_check = build3 (COND_EXPR, void_type_node, length_check,
+-				 throw_call, void_zero_node);
+-	  finish_expr_stmt (length_check);
+ 	}
+ 
+       if (try_const)
 diff --git a/gcc/cp/mangle.c b/gcc/cp/mangle.c
 index 8da62b5..383df7d 100644
 --- a/gcc/cp/mangle.c
@@ -544,7 +616,7 @@ index 8da62b5..383df7d 100644
  
        write_unqualified_name (decl);
 diff --git a/gcc/doc/invoke.texi b/gcc/doc/invoke.texi
-index 1496d30..1de4e3e7 100644
+index 1496d30..1de4e3e 100644
 --- a/gcc/doc/invoke.texi
 +++ b/gcc/doc/invoke.texi
 @@ -8532,6 +8532,9 @@ Use the @command{bfd} linker instead of the default linker.
@@ -1039,6 +1111,46 @@ index 65cbba8..68b92f2 100644
  
  #ifndef HAVE_STRTOULL
  # define strtoull(ptr, eptr, base) strtoul (ptr, eptr, base)
+diff --git a/libstdc++-v3/config/abi/post/alpha-linux-gnu/baseline_symbols.txt b/libstdc++-v3/config/abi/post/alpha-linux-gnu/baseline_symbols.txt
+index c62f4db..afd26e9 100644
+--- a/libstdc++-v3/config/abi/post/alpha-linux-gnu/baseline_symbols.txt
++++ b/libstdc++-v3/config/abi/post/alpha-linux-gnu/baseline_symbols.txt
+@@ -2703,7 +2703,6 @@ FUNC:__cxa_rethrow@@CXXABI_1.3
+ FUNC:__cxa_thread_atexit@@CXXABI_1.3.7
+ FUNC:__cxa_throw@@CXXABI_1.3
+ FUNC:__cxa_throw_bad_array_length@@CXXABI_1.3.8
+-FUNC:__cxa_throw_bad_array_new_length@@CXXABI_1.3.8
+ FUNC:__cxa_tm_cleanup@@CXXABI_TM_1
+ FUNC:__cxa_vec_cctor@@CXXABI_1.3
+ FUNC:__cxa_vec_cleanup@@CXXABI_1.3
+diff --git a/libstdc++-v3/config/abi/pre/gnu-versioned-namespace.ver b/libstdc++-v3/config/abi/pre/gnu-versioned-namespace.ver
+index 33a0068..a34dcbe 100644
+--- a/libstdc++-v3/config/abi/pre/gnu-versioned-namespace.ver
++++ b/libstdc++-v3/config/abi/pre/gnu-versioned-namespace.ver
+@@ -232,9 +232,6 @@ CXXABI_2.0 {
+     _ZTSSt17bad_function_call;
+     _ZTVSt17bad_function_call;
+ 
+-    __cxa_throw_bad_array_new_length;
+-    _Z*St20bad_array_new_length*;
+-
+     __cxa_throw_bad_array_length;
+     _Z*St16bad_array_length*;
+ 
+diff --git a/libstdc++-v3/config/abi/pre/gnu.ver b/libstdc++-v3/config/abi/pre/gnu.ver
+index 9e1f4da..211efe0 100644
+--- a/libstdc++-v3/config/abi/pre/gnu.ver
++++ b/libstdc++-v3/config/abi/pre/gnu.ver
+@@ -1567,9 +1567,6 @@ CXXABI_1.3.7 {
+ } CXXABI_1.3.6;
+ 
+ CXXABI_1.3.8 {
+-    __cxa_throw_bad_array_new_length;
+-    _Z*St20bad_array_new_length*;
+-
+     __cxa_throw_bad_array_length;
+     _Z*St16bad_array_length*;
+ } CXXABI_1.3.7;
 diff --git a/libstdc++-v3/config/locale/generic/c_locale.cc b/libstdc++-v3/config/locale/generic/c_locale.cc
 index 0d309a5..b4dcea9 100644
 --- a/libstdc++-v3/config/locale/generic/c_locale.cc
@@ -1230,6 +1342,27 @@ index eef9df6..c1cfdd9 100644
      };
  
    struct __do_member_type_wrapper
+diff --git a/libstdc++-v3/libsupc++/cxxabi.h b/libstdc++-v3/libsupc++/cxxabi.h
+index cf2c060..838dc3f 100644
+--- a/libstdc++-v3/libsupc++/cxxabi.h
++++ b/libstdc++-v3/libsupc++/cxxabi.h
+@@ -145,14 +145,11 @@ namespace __cxxabiv1
+   __cxa_deleted_virtual(void) __attribute__ ((__noreturn__));
+ 
+   // Exception handling auxillary.
+-  void 
++  void
+   __cxa_bad_cast() __attribute__((__noreturn__));
+ 
+-  void 
+-  __cxa_bad_typeid() __attribute__((__noreturn__));
+-
+   void
+-  __cxa_throw_bad_array_new_length() __attribute__((__noreturn__));
++  __cxa_bad_typeid() __attribute__((__noreturn__));
+ 
+   void
+   __cxa_throw_bad_array_length() __attribute__((__noreturn__));
 diff --git a/libstdc++-v3/libsupc++/eh_arm.cc b/libstdc++-v3/libsupc++/eh_arm.cc
 index a91405e..03c157b 100644
 --- a/libstdc++-v3/libsupc++/eh_arm.cc
@@ -1258,6 +1391,20 @@ index a91405e..03c157b 100644
 +#pragma GCC visibility pop
 +
  #endif
+diff --git a/libstdc++-v3/libsupc++/eh_aux_runtime.cc b/libstdc++-v3/libsupc++/eh_aux_runtime.cc
+index 806b479..560cc9f 100644
+--- a/libstdc++-v3/libsupc++/eh_aux_runtime.cc
++++ b/libstdc++-v3/libsupc++/eh_aux_runtime.cc
+@@ -38,9 +38,5 @@ __cxxabiv1::__cxa_bad_typeid ()
+ { _GLIBCXX_THROW_OR_ABORT(std::bad_typeid()); }
+ 
+ extern "C" void
+-__cxxabiv1::__cxa_throw_bad_array_new_length ()
+-{ _GLIBCXX_THROW_OR_ABORT(std::bad_array_new_length()); }
+-
+-extern "C" void
+ __cxxabiv1::__cxa_throw_bad_array_length ()
+ { _GLIBCXX_THROW_OR_ABORT(std::bad_array_length()); }
 diff --git a/libstdc++-v3/libsupc++/eh_globals.cc b/libstdc++-v3/libsupc++/eh_globals.cc
 index 5d4ad64..3c28cf9 100644
 --- a/libstdc++-v3/libsupc++/eh_globals.cc
