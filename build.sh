@@ -45,7 +45,7 @@ SRC="$DIR/src"
 # Note: we're only building arm-linux-androideabi currently
 #
 # TODO: support more triplets
-DEST=$ANDROID_BUILD_TOP/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-inline
+DEST=$ANDROID_BUILD_TOP/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-$TARGET_GCC_VERSION
 
 # Before we do anything else, ensure that $DEST is clean.
 # This is due to the CleanSpec behavior not acting
@@ -57,11 +57,12 @@ rm -rf $DEST
 
 # We must build libhardware_legacy with a prebuilt
 # toolchain for some devices
+export OLD_GCC_VAR=$TARGET_GCC_VERSION
 export TARGET_GCC_VERSION=4.8
 cd $ANDROID_BUILD_TOP
 make $SMP libhardware_legacy
 cp -f $OUT/system/lib/libhardware_legacy.so $OUT/toolchain_build
-export TARGET_GCC_VERSION=inline
+export TARGET_GCC_VERSION=$OLD_GCC_VAR
 cd $DIR
 
 # Export gcc version as an environment variable for
