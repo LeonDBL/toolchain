@@ -14,28 +14,22 @@
 # All other dependencies are installed in metapackages
 # on debian systems in the ABS setup.
 if ! makeinfo --version > /dev/null; then
-    echo -e "makeinfo not found! This is required to build the toolchain inline!"
-    echo -e "You may install on ubuntu or debian by selecting \"y\""
-    echo -e "at the prompt and typing your password."
-    echo -e "Otherwise, you want to install \"texinfo\" using your"
-    echo -e "preferred package manager"
-    read -p "Install? (y/n)?" choice
-    case "$choice" in
-      y|Y|yes|Yes )
-          sudo apt-get install texinfo
-          ;;
-      n|N|no|No )
-          echo -e "You're missing a necessary dependency!"
-          echo -e "The build cannot continue. To use a prebuilt toolchain,"
-          echo -e "run \"choosecombo\" and select \"release\" for build type"
-          echo -e "instead of running \"lunch\""
-          exit 0
-          ;;
-      * )
-          echo -e "Invalid choice:"
-          echo -e "You must either select \"y\" or \"n\"
-          ;;
-    esac
+   echo -e "makeinfo not found! This is required to build the toolchain inline!"
+   echo -e "You may install on ubuntu or debian by selecting \"y\""
+   echo -e "at the prompt and typing your password."
+   echo -e "Otherwise, you want to install \"texinfo\" using your"
+   echo -e "preferred package manager"
+   echo -e "Install? (y/n) \c"
+   read
+   if "$REPLY" = "y"; then
+      sudo apt-get install texinfo
+   else
+      echo -e "You're missing a necessary dependency."
+      echo -e "The build cannot continue. To use a prebuilt toolchain,"
+      echo -e "run \"choosecombo\" and select \"release\" for build type"
+      echo -e "instead of running \"lunch\""
+      exit 0
+   fi
 fi
 
 # Make the toolchain build directory
