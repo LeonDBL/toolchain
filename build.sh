@@ -107,8 +107,6 @@ if [ "$cpu_variant" = "$krait" ]; then
             --with-tune=cortex-a9 \
             --target=arm-linux-androideabi \
             --enable-graphite=yes \
-            --enable-gold=yes \
-            --enable-plugins \
             --disable-libsanitizer
 else
     $SRC/build/configure \
@@ -126,8 +124,6 @@ else
             --with-tune="$TARGET_CPU_VARIANT" \
             --target=arm-linux-androideabi \
             --enable-graphite=yes \
-            --enable-gold=yes \
-            --enable-plugins \
             --disable-libsanitizer
 fi
 
