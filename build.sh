@@ -72,7 +72,18 @@ git reset --hard --quiet
 # is comprised of AOSP commits and GCC
 # trunk backports.
 patch -p1 < "$DIR/gcc-$GCC-android.patch"
-cd $DIR
+
+# Ensure the binutils source to be used is in an
+# unpatched state before we apply our patchset.
+cd $SRC/gcc/gcc-$BINUTILS
+git add .
+git reset --hard --quiet
+
+# Apply the fully squashed linaro patchset
+# patch onto the binutils source. The patchset
+# is comprised of linaro commits from binutils-
+# current
+patch -p1 < "$DIR/binutils-$GCC-android.patch"
 
 mkdir -p $OUT/toolchain_build
 cd $OUT/toolchain_build
