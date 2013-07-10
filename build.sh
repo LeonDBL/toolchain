@@ -26,9 +26,14 @@ if ! makeinfo > /dev/null; then
    fi
 fi
 
-# Export gcc version as an environment variable for
-# use elsewhere in the Android Build System
-export GCC_SOURCE_VER=$GCC
+# Make the toolchain build directory
+# we will use for toolchain build and
+# other misc. tasks
+mkdir -p $OUT/toolchain_build
+
+# Set our local paths
+DIR="$ANDROID_BUILD_TOP/external/codefirex"
+SRC="$DIR/src"
 
 # Installation location
 # Note: we're only building arm-linux-androideabi currently
@@ -44,16 +49,26 @@ rm -rf $DEST
 # Parallel build flag passed to make
 [ -z "$SMP" ] && SMP="-j`getconf _NPROCESSORS_ONLN`"
 
+# We must build libhardware_legacy with a prebuilt
+# toolchain for some devices
+export OLD_GCC_VAR=$TARGET_GCC_VERSION
+export TARGET_GCC_VERSION=4.8
+cd $ANDROID_BUILD_TOP
+make $SMP libhardware_legacy
+cp -f $OUT/target/product/${TARGET_PRODUCT:5}/system/lib/libhardware_legacy.so $OUT/toolchain_build
+export TARGET_GCC_VERSION=$OLD_GCC_VAR
+cd $DIR
+
+# Export gcc version as an environment variable for
+# use elsewhere in the Android Build System
+export GCC_SOURCE_VER=$GCC
+
 cpu_variant="$TARGET_CPU_VARIANT"
 krait_variant=krait
 
 # Set locales to avoid python warnings
 # or errors depending on configuration
 export LC_ALL=C
-
-# Set our local paths
-DIR="$ANDROID_BUILD_TOP/external/codefirex"
-SRC="$DIR/src"
 
 # Ensure the GCC source to be used is in an
 # unpatched state before we apply our patchset.
@@ -68,7 +83,6 @@ git reset --hard --quiet
 patch -p1 < "$DIR/gcc-$GCC-android.patch"
 cd $DIR
 
-mkdir -p $OUT/toolchain_build
 cd $OUT/toolchain_build
 
 # Configure the build for arm-linux-androideabi
