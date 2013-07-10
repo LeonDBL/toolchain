@@ -214,5 +214,4 @@ export PATH=$NEWPATH
 # Go back to android build top to continue the build
 cd $ANDROID_BUILD_TOP
 
-# Double check that TARGET_GCC_VERSION is set correctly
-export TARGET_GCC_VERSION=$TARGET_GCC_VERSION
+exit 0
