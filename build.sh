@@ -1,7 +1,7 @@
 #!/bin/bash
 
 # What we're building with
-[ -z "$BINUTILS" ] && BINUTILS=2.23
+[ -z "$BINUTILS" ] && BINUTILS=upstream
 [ -z "$CLOOG" ] && CLOOG=0.18.0
 [ -z "$PPL" ] && PPL=1.0
 [ -z "$GCC" ] && GCC=4.8
