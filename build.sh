@@ -61,7 +61,7 @@ export OLD_GCC_VAR=$TARGET_GCC_VERSION
 export TARGET_GCC_VERSION=4.8
 cd $ANDROID_BUILD_TOP
 make $SMP libhardware_legacy
-cp -f $OUT/target/product/${TARGET_PRODUCT:5}/system/lib/libhardware_legacy.so $OUT/toolchain_build
+cp -f $OUT/system/lib/libhardware_legacy.so $OUT/toolchain_build
 export TARGET_GCC_VERSION=$OLD_GCC_VAR
 cd $DIR
 
