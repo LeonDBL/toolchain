@@ -13,7 +13,7 @@
 # First check that the user has makeinfo installed.
 # All other dependencies are installed in metapackages
 # on debian systems in the ABS setup.
-if ! makeinfo > /dev/null; then
+if ! makeinfo --version > /dev/null; then
    echo -e "makeinfo not found! This is required to build the toolchain inline!"
    echo -e "You may install on ubuntu or debian by selecting \"y\""
    echo -e "at the prompt and typing your password."
