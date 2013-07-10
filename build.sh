@@ -21,7 +21,7 @@ if ! makeinfo --version > /dev/null; then
    echo -e "preferred package manager"
    echo -e "Install? (y/n) \c"
    read
-   if "$REPLY" = "y"; then
+   if [ "$REPLY" = "y" ]; then
       sudo apt-get install texinfo
    else
       echo -e "You're missing a necessary dependency."
