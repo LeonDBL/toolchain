@@ -75,7 +75,7 @@ patch -p1 < "$DIR/gcc-$GCC-android.patch"
 
 # Ensure the binutils source to be used is in an
 # unpatched state before we apply our patchset.
-cd $SRC/gcc/gcc-$BINUTILS
+cd $SRC/binutils/binutils-$BINUTILS
 git add .
 git reset --hard --quiet
 
@@ -83,7 +83,7 @@ git reset --hard --quiet
 # patch onto the binutils source. The patchset
 # is comprised of linaro commits from binutils-
 # current
-patch -p1 < "$DIR/binutils-$GCC-android.patch"
+patch -p1 < "$DIR/binutils-$BINUTILS-android.patch"
 
 mkdir -p $OUT/toolchain_build
 cd $OUT/toolchain_build
