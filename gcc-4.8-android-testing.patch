@@ -14613,20 +14613,6 @@ index 56d2d3e..13bb2de 100644
  };
  
  #define pp_set_line_maximum_length(PP, L) \
-diff --git a/gcc/testsuite/ChangeLog b/gcc/testsuite/ChangeLog
-index 4cdd5b0..1ec5f27 100644
---- a/gcc/testsuite/ChangeLog
-+++ b/gcc/testsuite/ChangeLog
-@@ -1,3 +1,9 @@
-+2013-07-10  Janis Johnson  <janisjo@codesourcery.com>
-+
-+	* gcc.target/powerpc/20020118-1.c: Force 128-bit stack alignment
-+	for EABI targets.
-+	* gcc.c-torture/execute/nest-align-1.x: New.
-+
- 2013-07-08  Janis Johnson  <janisjo@codesourcery.com>
- 
- 	* gcc.target/powerpc/ppc-spe64-1.c: Update expected error message.
 diff --git a/gcc/testsuite/ChangeLog.cfx b/gcc/testsuite/ChangeLog.cfx
 new file mode 100644
 index 0000000..7f3217e
@@ -16025,7 +16011,7 @@ index 990cd49..ba1a975 100644
  ifneq (,$(vis_hide))
  
 diff --git a/libgcc/config.host b/libgcc/config.host
-index 67257b8..c15701f 100644
+index 259c9a7..86255e6 100644
 --- a/libgcc/config.host
 +++ b/libgcc/config.host
 @@ -285,6 +285,11 @@ aarch64*-*-elf)
