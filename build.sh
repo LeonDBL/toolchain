@@ -73,6 +73,10 @@ git reset --hard --quiet
 # trunk backports.
 patch -p1 < "$DIR/gcc-$GCC-android.patch"
 
+# Apply Andrew Hsieh's patch to add
+# -foptimize-sincos for BIONIC
+patch -p1 < "$DIR/gcc-android-optimize-sincos.patch"
+
 # Ensure the binutils source to be used is in an
 # unpatched state before we apply our patchset.
 cd $SRC/binutils/binutils-$BINUTILS
