@@ -11,26 +11,33 @@
 [ -z "$MPC" ] && MPC=1.0.1
 
 # First check that the user has makeinfo installed.
-# All other dependencies are installed in metapackages
-# on debian systems in the ABS setup.
 if ! makeinfo --version > /dev/null; then
-   echo -e "makeinfo not found! This is required to build the toolchain inline!"
-   echo -e "You may install on ubuntu or debian by selecting \"y\""
-   echo -e "at the prompt and typing your password."
-   echo -e "Otherwise, you want to install \"texinfo\" using your"
-   echo -e "preferred package manager"
-   echo -e "Install? (y/n) \c"
-   read
-   if [ "$REPLY" = "y" ]; then
-      sudo apt-get install texinfo
-   else
-      echo -e "You're missing a necessary dependency."
-      echo -e "The build cannot continue. To use a prebuilt toolchain,"
-      echo -e "run \"choosecombo\" and select \"release\" for build type"
-      echo -e "instead of running \"lunch\""
-      exit 0
-   fi
+     echo -e "makeinfo not found! This is required to build the toolchain inline!"
+     echo -e "You may install on ubuntu or debian by selecting \"y\""
+     echo -e "at the prompt and typing your password."
+     echo -e "Otherwise, you want to install \"texinfo\" using your"
+     echo -e "preferred package manager"
+     read -p "Install? (y/n)?" choice
+     case "$choice" in
+       y|Y|yes|Yes) sudo apt-get install texinfo
+           ;;
+       n|N|no|No)
+           echo -e "You're missing a necessary dependency!"
+           echo -e "The build cannot continue. To use a prebuilt toolchain,"
+           echo -e "run \"choosecombo\" and select \"release\" for build type"
+           echo -e "instead of running \"lunch\""
+           exit 0
+           ;;
+       *)
+           echo -e "Invalid choice: $choice"
+           echo -e "You must either select \"y\" or \"n\""
+           ;;
+     esac
 fi
+
+# The path to the prebuilt host toolchain provided
+# by the Android Build System
+HOST_TC_PATH=$ANDROID_BUILD_TOP/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6/x86_64-linux/bin
 
 # Export gcc version as an environment variable for
 # use elsewhere in the Android Build System
@@ -147,7 +154,7 @@ export NEWPATH=$PATH
 # This uses the $USER environment variable. It's also
 # in use on bsd and darwin systems, but if it isn't set
 # for you, you may use the $(whoami) function instead.
-export PATH=/home/$USER/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/share/bin:$DEST
+export PATH=/home/$USER/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/share/bin:$HOST_TC_PATH
 
 # Make and install the toolchain to the proper path
 make $SMP
