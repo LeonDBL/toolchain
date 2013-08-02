@@ -74,15 +74,17 @@ cd $SRC/gcc/gcc-$GCC
 git add .
 git reset --hard --quiet
 
-# Apply the fully squashed cfX patchset
-# patch onto the GCC source. The patchset
-# is comprised of AOSP commits and GCC
-# trunk backports.
-patch -p1 < "$DIR/gcc-$GCC-android.patch"
-
 # Apply Andrew Hsieh's patch to add
 # -foptimize-sincos for BIONIC
 patch -p1 < "$DIR/gcc-android-optimize-sincos.patch"
+
+# Apply the fully squashed cfX patchset
+# patches onto the GCC source.
+#
+# The first patch is comprised of
+# is comprised of AOSP commits and GCC
+# trunk backports.
+patch -p1 < "$DIR/cfx-R1-gcc_$GCC-android.patch"
 
 # Ensure the binutils source to be used is in an
 # unpatched state before we apply our patchset.
@@ -94,7 +96,7 @@ git reset --hard --quiet
 # patch onto the binutils source. The patchset
 # is comprised of linaro commits from binutils-
 # current
-patch -p1 < "$DIR/binutils-$BINUTILS-android.patch"
+patch -p1 < "$DIR/cfx-R1-binutils_$BINUTILS-android.patch"
 
 mkdir -p $OUT/toolchain_build
 cd $OUT/toolchain_build
