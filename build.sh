@@ -81,10 +81,16 @@ patch -p1 < "$DIR/gcc-android-optimize-sincos.patch"
 # Apply the fully squashed cfX patchset
 # patches onto the GCC source.
 #
-# The first patch is comprised of
+# This first patch is comprised of
 # is comprised of AOSP commits and GCC
 # trunk backports.
 patch -p1 < "$DIR/cfx-R1-gcc_$GCC-android.patch"
+
+# This second patch is comprised of
+# commits from Google's (non-aosp)
+# gcc-4.8 branch. Also sets the
+# BASE-VER to 4.8.x-codefirex
+patch -p1 < "$DIR/cfx-R2-gcc_$GCC-android.patch"
 
 # Ensure the binutils source to be used is in an
 # unpatched state before we apply our patchset.
