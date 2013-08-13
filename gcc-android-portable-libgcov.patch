@@ -1,0 +1,143 @@
+diff --git a/gcc/gcov-io.c b/gcc/gcov-io.c
+index 116cc03..2cb2776 100644
+--- a/gcc/gcov-io.c
++++ b/gcc/gcov-io.c
+@@ -103,7 +103,7 @@ gcov_open (const char *name, int mode)
+   if (fd < 0)
+     return 0;
+ 
+-  while (fcntl (fd, F_SETLKW, &s_flock) && errno == EINTR)
++  while (fcntl (fd, F_SETLKW, &s_flock))
+     continue;
+ 
+   gcov_var.file = fdopen (fd, (mode > 0) ? "rb" : "r+b");
+diff --git a/libgcc/libgcov.c b/libgcc/libgcov.c
+index a93eddb..7f7b51d 100644
+--- a/libgcc/libgcov.c
++++ b/libgcc/libgcov.c
+@@ -142,11 +142,8 @@ create_file_directory (char *filename)
+ #else
+             && mkdir (filename) == -1
+ #endif
+-            /* The directory might have been made by another process.  */
+-	    && errno != EEXIST)
++	    )
+ 	  {
+-            fprintf (stderr, "profiling:%s:Cannot create directory\n",
+-		     filename);
+             *s = sep;
+ 	    return -1;
+ 	  };
+@@ -190,9 +187,6 @@ buffer_fn_data (const char *filename, const struct gcov_info *gi_ptr,
+   len = sizeof (*fn_buffer) + sizeof (fn_buffer->info.ctrs[0]) * n_ctrs;
+   fn_buffer = (struct gcov_fn_buffer *)malloc (len);
+ 
+-  if (!fn_buffer)
+-    goto fail;
+-  
+   fn_buffer->next = 0;
+   fn_buffer->fn_ix = fn_ix;
+   fn_buffer->info.ident = gcov_read_unsigned ();
+@@ -210,14 +204,11 @@ buffer_fn_data (const char *filename, const struct gcov_info *gi_ptr,
+       if (gcov_read_unsigned () != GCOV_TAG_FOR_COUNTER (ix))
+ 	{
+ 	  len = 0;
+-	  goto fail;
+ 	}
+ 
+       length = GCOV_TAG_COUNTER_NUM (gcov_read_unsigned ());
+       len = length * sizeof (gcov_type);
+       values = (gcov_type *)malloc (len);
+-      if (!values)
+-	goto fail;
+       
+       fn_buffer->info.ctrs[n_ctrs].num = length;
+       fn_buffer->info.ctrs[n_ctrs].values = values;
+@@ -230,10 +221,6 @@ buffer_fn_data (const char *filename, const struct gcov_info *gi_ptr,
+   *end_ptr = fn_buffer;
+   return &fn_buffer->next;
+ 
+- fail:
+-  fprintf (stderr, "profiling:%s:Function %u %s %u \n", filename, fn_ix,
+-	   len ? "cannot allocate" : "counter mismatch", len ? len : ix);
+-
+   return (struct gcov_fn_buffer **)free_fn_data (gi_ptr, fn_buffer, ix);
+ }
+ 
+@@ -272,9 +259,6 @@ gcov_version (struct gcov_info *ptr, gcov_unsigned_t version,
+       GCOV_UNSIGNED2STRING (v, version);
+       GCOV_UNSIGNED2STRING (e, GCOV_VERSION);
+ 
+-      fprintf (stderr,
+-	       "profiling:%s:Version mismatch - expected %.4s got %.4s\n",
+-	       filename? filename : ptr->filename, e, v);
+       return 0;
+     }
+   return 1;
+@@ -525,12 +509,10 @@ gcov_exit (void)
+ 	     Create directory and retry to open file. */
+           if (create_file_directory (gi_filename))
+ 	    {
+-	      fprintf (stderr, "profiling:%s:Skip\n", gi_filename);
+ 	      continue;
+ 	    }
+ 	  if (!gcov_open (gi_filename))
+ 	    {
+-              fprintf (stderr, "profiling:%s:Cannot open\n", gi_filename);
+ 	      continue;
+ 	    }
+ 	}
+@@ -541,8 +523,6 @@ gcov_exit (void)
+ 	  /* Merge data from file.  */
+ 	  if (tag != GCOV_DATA_MAGIC)
+ 	    {
+-	      fprintf (stderr, "profiling:%s:Not a gcov data file\n",
+-		       gi_filename);
+ 	      goto read_fatal;
+ 	    }
+ 	  length = gcov_read_unsigned ();
+@@ -662,18 +642,12 @@ gcov_exit (void)
+ 	  if (tag)
+ 	    {
+ 	    read_mismatch:;
+-	      fprintf (stderr, "profiling:%s:Merge mismatch for %s %u\n",
+-		       gi_filename, f_ix >= 0 ? "function" : "summary",
+-		       f_ix < 0 ? -1 - f_ix : f_ix);
+ 	      goto read_fatal;
+ 	    }
+ 	}
+       goto rewrite;
+ 
+     read_error:;
+-      fprintf (stderr, "profiling:%s:%s merging\n", gi_filename,
+-	       error < 0 ? "Overflow": "Error");
+-
+       goto read_fatal;
+ 
+     rewrite:;
+@@ -728,10 +702,6 @@ gcov_exit (void)
+                        || cs_all->run_max != cs_prg->run_max
+                        || cs_all->sum_max != cs_prg->sum_max))
+ 	    {
+-	      fprintf (stderr,
+-                       "profiling:%s:Data file mismatch - some data files may "
+-                       "have been concurrently updated without locking support\n",
+-		       gi_filename);
+ 	      all_prg.checksum = ~0u;
+ 	    }
+ #endif
+@@ -817,13 +787,7 @@ gcov_exit (void)
+     read_fatal:;
+       while (fn_buffer)
+ 	fn_buffer = free_fn_data (gi_ptr, fn_buffer, GCOV_COUNTERS);
+-
+-      if ((error = gcov_close ()))
+-	  fprintf (stderr, error  < 0 ?
+-		   "profiling:%s:Overflow writing\n" :
+-		   "profiling:%s:Error writing\n",
+-		   gi_filename);
+-    }
++	}
+ }
+ 
+ /* Reset all counters to zero.  */
