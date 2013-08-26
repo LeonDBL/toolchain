@@ -70,27 +70,9 @@ SRC="$DIR/src"
 
 # Ensure the GCC source to be used is in an
 # unpatched state before we apply our patchset.
-cd $SRC/gcc/gcc-$GCC
+cd $SRC/gcc
 git add .
 git reset --hard --quiet
-
-# Apply Andrew Hsieh's patch to add
-# -foptimize-sincos for BIONIC
-patch -p1 < "$DIR/gcc-android-optimize-sincos.patch"
-
-# Apply the fully squashed cfX patchset
-# patches onto the GCC source.
-#
-# This first patch is comprised of
-# is comprised of AOSP commits and GCC
-# trunk backports.
-patch -p1 < "$DIR/cfx-R1-gcc_$GCC-android.patch"
-
-# This second patch is comprised of
-# commits from Google's (non-aosp)
-# gcc-4.8 branch. Also sets the
-# BASE-VER to 4.8.x-codefirex
-patch -p1 < "$DIR/cfx-R2-gcc_$GCC-android.patch"
 
 # Ensure the binutils source to be used is in an
 # unpatched state before we apply our patchset.
