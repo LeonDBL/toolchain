@@ -58,7 +58,11 @@ rm -rf $DEST
 [ -z "$SMP" ] && SMP="-j`getconf _NPROCESSORS_ONLN`"
 
 cpu_variant="$TARGET_CPU_VARIANT"
-krait_variant=krait
+if [ "$cpu_variant" = "krait" ]; then
+   tune_variant=cortex-a9
+else
+   tune_variant="$TARGET_CPU_VARIANT"
+fi
 
 # Set locales to avoid python warnings
 # or errors depending on configuration
@@ -67,6 +71,7 @@ export LC_ALL=C
 # Set our local paths
 DIR="$ANDROID_BUILD_TOP/external/codefirex"
 SRC="$DIR/src"
+BIONIC_LIBC="$ANDROID_BUILD_TOP/bionic/libc"
 
 # Ensure the GCC source to be used is in an
 # unpatched state before we apply our patchset.
@@ -91,42 +96,24 @@ cd $OUT/toolchain_build
 
 # Configure the build for arm-linux-androideabi
 # with all additional arguments.
-# Also set --with-tune for TARGET_CPU_VARIANT
-if [ "$cpu_variant" = "$krait" ]; then
-    $SRC/build/configure \
-            --prefix="$DEST" \
-            --with-mpc-version="$MPC" \
-            --with-gdb-version="$GDB" \
-            --with-cloog-version="$CLOOG" \
-            --with-ppl-version="$PPL" \
-            --with-mpfr-version="$MPFR" \
-            --with-gmp-version="$GMP" \
-            --with-binutils-version="$BINUTILS" \
-            --with-gold-version="$BINUTILS" \
-            --with-gcc-version="$GCC" \
-            --with-sysroot=/ \
-            --with-tune=cortex-a9 \
-            --target=arm-linux-androideabi \
-            --enable-graphite=yes \
-            --disable-libsanitizer
-else
-    $SRC/build/configure \
-            --prefix="$DEST" \
-            --with-mpc-version="$MPC" \
-            --with-gdb-version="$GDB" \
-            --with-cloog-version="$CLOOG" \
-            --with-ppl-version="$PPL" \
-            --with-mpfr-version="$MPFR" \
-            --with-gmp-version="$GMP" \
-            --with-binutils-version="$BINUTILS" \
-            --with-gold-version="$BINUTILS" \
-            --with-gcc-version="$GCC" \
-            --with-sysroot=/ \
-            --with-tune="$TARGET_CPU_VARIANT" \
-            --target=arm-linux-androideabi \
-            --enable-graphite=yes \
-            --disable-libsanitizer
-fi
+# Also set --with-tune for $tune_variant
+$SRC/build/configure --prefix="$DEST" \
+        --with-mpc-version="$MPC" \
+        --with-gdb-version="$GDB" \
+        --with-cloog-version="$CLOOG" \
+        --with-ppl-version="$PPL" \
+        --with-mpfr-version="$MPFR" \
+        --with-gmp-version="$GMP" \
+        --with-binutils-version="$BINUTILS" \
+        --with-gold-version="$BINUTILS" \
+        --with-gcc-version="$GCC" \
+        --with-sysroot=/ \
+        --with-headers="$BIONIC_LIBC"/include \
+        --with-headers="$BIONIC_LIBC"/arch-arm/include \
+        --with-tune="$tune_variant" \
+        --target=arm-linux-androideabi \
+        --enable-graphite=yes \
+        --disable-libsanitizer
 
 # We must use a "generic" $PATH for building
 # the toolchain inline so as not to use the
