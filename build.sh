@@ -79,6 +79,17 @@ cd $SRC/gcc
 git add .
 git reset --hard --quiet
 
+# Apply patch to gcc to improve libgcov portability.
+# Without this change, we need to link to libcore
+# while linking to libgcov.a, which therefore
+# increases total library size.
+#
+# XXX: This isn't included in the gcc source due to
+# being a very nasty hack I would like to eventually
+# avoid.
+cd gcc-$GCC
+patch -p1 < "$DIR/gcc-android-portable-libgcov.patch"
+
 # Ensure the binutils source to be used is in an
 # unpatched state before we apply our patchset.
 cd $SRC/binutils/binutils-$BINUTILS
