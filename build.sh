@@ -73,23 +73,6 @@ DIR="$ANDROID_BUILD_TOP/external/codefirex"
 SRC="$DIR/src"
 BIONIC_LIBC="$ANDROID_BUILD_TOP/bionic/libc"
 
-# Ensure the GCC source to be used is in an
-# unpatched state before we apply our patchset.
-cd $SRC/gcc
-git add .
-git reset --hard --quiet
-
-# Apply patch to gcc to improve libgcov portability.
-# Without this change, we need to link to libcore
-# while linking to libgcov.a, which therefore
-# increases total library size.
-#
-# XXX: This isn't included in the gcc source due to
-# being a very nasty hack I would like to eventually
-# avoid.
-cd gcc-$GCC
-patch -p1 < "$DIR/gcc-android-portable-libgcov.patch"
-
 # Ensure the binutils source to be used is in an
 # unpatched state before we apply our patchset.
 cd $SRC/binutils/binutils-$BINUTILS
@@ -195,11 +178,6 @@ echo "If you don't know what this means don't worry."
 echo "If you do know what this means, we did it this way"
 echo "to rid your build system of unnecessary symlinks"
 echo "=========================================================="
-
-# HACK: reset gcc back to it's unpatched state
-cd $SRC/gcc/gcc-$GCC
-git add .
-git reset --hard --quiet
 
 # Restore Android Build System set $PATH
 export PATH=$NEWPATH
