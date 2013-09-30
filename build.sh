@@ -1,97 +1,140 @@
 #!/bin/bash
 
-# What we're building with
-[ -z "$BINUTILS" ] && BINUTILS=upstream
-[ -z "$CLOOG" ] && CLOOG=0.18.0
-[ -z "$PPL" ] && PPL=1.0
-[ -z "$GCC" ] && GCC=4.8
-[ -z "$GDB" ] && GDB=linaro-7.6-2013.05
-[ -z "$GMP" ] && GMP=5.1.2
-[ -z "$MPFR" ] && MPFR=3.1.2
-[ -z "$MPC" ] && MPC=1.0.1
+##################################################################
+#                                                                #
+#                         Initial Setup                          #
+#                                                                #
+##################################################################
 
-# First check that the user has makeinfo installed.
-if ! makeinfo --version > /dev/null; then
-     echo -e "makeinfo not found! This is required to build the toolchain inline!"
-     echo -e "You may install on ubuntu or debian by selecting \"y\""
-     echo -e "at the prompt and typing your password."
-     echo -e "Otherwise, you want to install \"texinfo\" using your"
-     echo -e "preferred package manager"
-     read -p "Install? (y/n)?" choice
-     case "$choice" in
-       y|Y|yes|Yes) sudo apt-get install texinfo
-           ;;
-       n|N|no|No)
-           echo -e "You're missing a necessary dependency!"
-           echo -e "The build cannot continue. To use a prebuilt toolchain,"
-           echo -e "run \"choosecombo\" and select \"release\" for build type"
-           echo -e "instead of running \"lunch\""
-           exit 0
-           ;;
-       *)
-           echo -e "Invalid choice: $choice"
-           echo -e "You must either select \"y\" or \"n\""
-           ;;
-     esac
-fi
+# Set component versions also used in determining paths
+function toolchain_set_component_versions()
+{
+    [ -z "$BINUTILS" ] && BINUTILS=upstream
+    [ -z "$CLOOG" ] && CLOOG=0.18.0
+    [ -z "$PPL" ] && PPL=1.0
+    [ -z "$GCC" ] && GCC=4.8
+    [ -z "$GDB" ] && GDB=linaro-7.6-2013.05
+    [ -z "$GMP" ] && GMP=5.1.2
+    [ -z "$MPFR" ] && MPFR=3.1.2
+    [ -z "$MPC" ] && MPC=1.0.1
+}
 
-# The path to the prebuilt host toolchain provided
-# by the Android Build System
-HOST_TC_PATH=$ANDROID_BUILD_TOP/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6/x86_64-linux/bin
+# Set common variables used for the build
+function toolchain_common_setup()
+{
+    # Export gcc version as an environment variable for
+    # use elsewhere in the Android Build System
+    export GCC_SOURCE_VER=$GCC
 
-# Export gcc version as an environment variable for
-# use elsewhere in the Android Build System
-export GCC_SOURCE_VER=$GCC
+    # Parallel build flag passed to make
+    [ -z "$SMP" ] && SMP="-j`getconf _NPROCESSORS_ONLN`"
 
-# Installation location
-# Note: we're only building arm-linux-androideabi currently
-#
-# TODO: support more triplets
-DEST=$ANDROID_BUILD_TOP/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-$TARGET_GCC_VERSION
+    # Set cpu variant to be used in configure
+    # XXX: only applicable to ARM currently due to one
+    # supported target triplet
+    cpu_variant="$TARGET_CPU_VARIANT"
+    if [ "$cpu_variant" = "krait" ]; then
+       tune_variant=cortex-a9
+    else
+       tune_variant="$TARGET_CPU_VARIANT"
+    fi
 
-# Before we do anything else, ensure that $DEST is clean.
-# This is due to the CleanSpec behavior not acting
-# as we would like it to.
-rm -rf $DEST
+    # Set locales to avoid python warnings
+    # or errors depending on configuration
+    export LC_ALL=C
+}
 
-# Parallel build flag passed to make
-[ -z "$SMP" ] && SMP="-j`getconf _NPROCESSORS_ONLN`"
 
-cpu_variant="$TARGET_CPU_VARIANT"
-if [ "$cpu_variant" = "krait" ]; then
-   tune_variant=cortex-a9
-else
-   tune_variant="$TARGET_CPU_VARIANT"
-fi
+##################################################################
+#                                                                #
+#                         Path handling                          #
+#                                                                #
+##################################################################
 
-# Set locales to avoid python warnings
-# or errors depending on configuration
-export LC_ALL=C
+# Set and clear destination
+function toolchain_prepare_destination()
+{
+    # TODO: support more triplets
+    DEST=$ANDROID_BUILD_TOP/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-$TARGET_GCC_VERSION
+    rm -rf $DEST
+    mkdir -p $OUT/toolchain_build
+}
 
-# Set our local paths
-DIR="$ANDROID_BUILD_TOP/external/codefirex"
-SRC="$DIR/src"
-BIONIC_LIBC="$ANDROID_BUILD_TOP/bionic/libc"
+# Set local paths
+function toolchain_set_local_paths()
+{
+    BIONIC_LIBC="$ANDROID_BUILD_TOP/bionic/libc"
+    DEP_BIN="$DIR/bin"
+    DIR="$ANDROID_BUILD_TOP/toolchain"
+    SRC="$DIR/src"
+}
 
-# Ensure the binutils source to be used is in an
-# unpatched state before we apply our patchset.
-cd $SRC/binutils/binutils-$BINUTILS
-git add .
-git reset --hard --quiet
+# Set common paths and $PATH.
+function toolchain_set_common_paths()
+{
+    # The path to the prebuilt host toolchain provided
+    # by the Android Build System
+    HOST_TC_PATH="$ANDROID_BUILD_TOP/prebuilts/gcc/linux-x86/host/x86_64-linux-glibc2.7-4.6/x86_64-linux/bin"
 
-# Apply the fully squashed linaro patchset
-# patch onto the binutils source. The patchset
-# is comprised of linaro commits from binutils-
-# current
-patch -p1 < "$DIR/cfx-R1-binutils_$BINUTILS-android.patch"
+    # Backup $PATH with ABS additions
+    export NEWPATH=$PATH
 
-mkdir -p $OUT/toolchain_build
-cd $OUT/toolchain_build
+    # Set a generic $PATH
+    export PATH=/home/$USER/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/share/bin:$DEP_BIN:$HOST_TC_PATH
+}
 
-# Configure the build for arm-linux-androideabi
-# with all additional arguments.
-# Also set --with-tune for $tune_variant
-$SRC/build/configure --prefix="$DEST" \
+
+##################################################################
+#                                                                #
+#                      Dependency handling                       #
+#                                                                #
+##################################################################
+
+# Check that the user has makeinfo or texinfo installed
+# before proceeding. If not, then build texinfo from source.
+# texinfo will be installed to $DEP_BIN
+# TODO: add dependency checking for patch and make.
+function toolchain_dependency_resolution()
+{
+    if ! makeinfo --version > /dev/null; then
+        $SRC/texinfo/configure \
+            --prefix=$DEP_BIN \
+            --exec_prefix=$DEP_BIN
+
+        make $SMP
+        make $SMP install exec_prefix=$DEP_BIN
+    fi
+}
+
+
+##################################################################
+#                                                                #
+#                         Patch handling                         #
+#                                                                #
+##################################################################
+
+# Apply squashed linaro patchset onto binutils
+function toolchain_patch_binutils()
+{
+    cd $SRC/binutils/binutils-$BINUTILS
+    git add .
+    git add --all
+    git reset --hard --quiet
+    patch -p1 < "$DIR/cfx-R1-binutils_$BINUTILS-android.patch"
+}
+
+
+##################################################################
+#                                                                #
+#                    Toolchain Configuration                     #
+#                                                                #
+##################################################################
+
+# Configure for arm-linux-androideabi triplet
+function toolchain_configure_arm-linux-androideabi()
+{
+    cd $OUT/toolchain_build
+    $SRC/build/configure --prefix="$DEST" \
         --with-mpc-version="$MPC" \
         --with-gdb-version="$GDB" \
         --with-cloog-version="$CLOOG" \
@@ -108,81 +151,132 @@ $SRC/build/configure --prefix="$DEST" \
         --target=arm-linux-androideabi \
         --enable-graphite=yes \
         --disable-libsanitizer
+}
 
-# We must use a "generic" $PATH for building
-# the toolchain inline so as not to use the
-# path with the ABS additions.
-# First backup the new $PATH with Android
-# path additions.
-export NEWPATH=$PATH
 
-# Export a "generic" path for sysrooted toolchain building.
-# This should be foolproof, but please let me know
-# at synergye@codefi.re if there are any additions
-# that should be made for your distro or configuration.
-# Also add $DEST to the new $PATH.
-#
-# This uses the $USER environment variable. It's also
-# in use on bsd and darwin systems, but if it isn't set
-# for you, you may use the $(whoami) function instead.
-export PATH=/home/$USER/bin:/usr/local/sbin:/usr/local/bin:/usr/sbin:/usr/bin:/sbin:/bin:/usr/share/bin:$HOST_TC_PATH
+##################################################################
+#                                                                #
+#                        Toolchain Build                         #
+#                                                                #
+##################################################################
 
-# Make and install the toolchain to the proper path
-make $SMP
-make install
+# This is generic
+function toolchain_make_install()
+{
+    make $SMP
+    make install
+}
 
-#We need to copy the necessary makefiles for the
-# Android build system now.
-cp $DIR/Makefiles/Android.mk $DEST/Android.mk
-cp $DIR/Makefiles/toolchain.mk $DEST/toolchain.mk
-cp $DIR/Makefiles/lib32-Android.mk $DEST/lib32/Android.mk
 
-echo ""
-echo "=========================================================="
-echo "Toolchain build successful."
-echo "The toolchain can be found in $DEST."
-echo "Now building Android with cfX-Toolchain."
-echo "=========================================================="
-echo ""
-echo "=========================================================="
-echo "The toolchain was built with the following:"
-echo "=========================================================="
-echo "Binutils=\"$BINUTILS\""
-echo "Cloog=\"$CLOOG\""
-echo "PPL=\"$PPL\""
-echo "GCC=\"$GCC\""
-echo "GDB=\"$GDB\""
-echo "GMP=\"$GMP\""
-echo "MPFR=\"$MPFR\""
-echo "MPC=\"$MPC\""
-echo "=========================================================="
-echo ""
-echo "=========================================================="
-echo "A few notes:"
-echo "=========================================================="
-echo "1) If you do not want to build the toolchain inline in the"
-echo "future, run \"choosecombo\" instead of lunch."
-echo "Select \"release\" from the build type menu instead of"
-echo "\"development\""
-echo ""
-echo "2) We use $OUT for toolchain building due to some"
-echo "build configurations using multiple drives or partitions."
-echo ""
-echo "3) We have the entire toolchain_build folder in a"
-echo "cleanspec, so there's no need to delete it ourselves."
-echo "This means if you do not make clean, no new toolchain is"
-echo "built (or fully built)."
-echo ""
-echo "4) The toolchain build uses your *HOST* sysroot."
-echo "If you don't know what this means don't worry."
-echo "If you do know what this means, we did it this way"
-echo "to rid your build system of unnecessary symlinks"
-echo "=========================================================="
+##################################################################
+#                                                                #
+#                      Toolchain PostBuild                       #
+#                                                                #
+##################################################################
 
-# Restore Android Build System set $PATH
-export PATH=$NEWPATH
+# Copy makefiles into compiled destination
+function toolchain_copy_makefiles()
+{
+    cp $DIR/Makefiles/Android.mk $DEST/Android.mk
+    cp $DIR/Makefiles/toolchain.mk $DEST/toolchain.mk
+    cp $DIR/Makefiles/lib32-Android.mk $DEST/lib32/Android.mk
+}
 
-# Go back to android build top to continue the build
-cd $ANDROID_BUILD_TOP
+# Print completion info
+function toolchain_print_succeed_info()
+{
+    echo ""
+    echo "=========================================================="
+    echo "Toolchain build successful."
+    echo "The toolchain can be found in $DEST."
+    echo "Now building Android with cfX-Toolchain."
+    echo "=========================================================="
+    echo ""
+    echo "=========================================================="
+    echo "The toolchain was built with the following:"
+    echo "=========================================================="
+    echo "Binutils=\"$BINUTILS\""
+    echo "Cloog=\"$CLOOG\""
+    echo "PPL=\"$PPL\""
+    echo "GCC=\"$GCC\""
+    echo "GDB=\"$GDB\""
+    echo "GMP=\"$GMP\""
+    echo "MPFR=\"$MPFR\""
+    echo "MPC=\"$MPC\""
+    echo "=========================================================="
+    echo ""
+    echo "=========================================================="
+    echo "A few notes:"
+    echo "=========================================================="
+    echo "1) If you do not want to build the toolchain inline in the"
+    echo "future, run \"choosecombo\" instead of lunch."
+    echo "Select \"release\" from the build type menu instead of"
+    echo "\"development\""
+    echo ""
+    echo "2) We use $OUT for toolchain building due to some"
+    echo "build configurations using multiple drives or partitions."
+    echo ""
+    echo "3) We have the entire toolchain_build folder in a"
+    echo "cleanspec, so there's no need to delete it ourselves."
+    echo "This means if you do not make clean, no new toolchain is"
+    echo "built (or fully built)."
+    echo ""
+    echo "4) The toolchain build uses your *HOST* sysroot."
+    echo "If you don't know what this means don't worry."
+    echo "If you do know what this means, we did it this way"
+    echo "to rid your build system of unnecessary symlinks"
+    echo "=========================================================="
+}
 
-exit 0
+# Print failure info
+function toolchain_print_fail_info()
+{
+    echo ""
+    echo "=========================================================="
+    echo "Toolchain build failed!"
+    echo "Please check scrollback for the issue."
+    echo "If needed, please mail the log to \"synergye (at) codefi.re\"."
+    echo "=========================================================="
+}
+
+# Reset binutils and restore PATH
+function toolchain_sanity_reset()
+{
+    cd $SRC/binutils/binutils-$BINUTILS
+    git add .
+    git add --all
+    git reset --hard --quiet
+
+    export PATH=$NEWPATH
+    cd $ANDROID_BUILD_TOP
+}
+
+
+##################################################################
+#                                                                #
+#                  Full Triplet Build Functions                  #
+#                                                                #
+##################################################################
+
+# Build for arm-linux-androideabi
+function toolchain_build_arm-linux-androideabi()
+{
+    toolchain_set_component_versions
+    toolchain_common_setup
+    toolchain_prepare_destination
+    toolchain_set_local_paths
+    toolchain_set_common_paths
+    toolchain_dependency_resolution
+    toolchain_patch_binutils
+    toolchain_configure_arm-linux-androideabi
+    toolchain_make_install
+    toolchain_copy_makefiles
+
+    if $DEST/bin/arm-linux-androideabi-gcc --version > /dev/null; then
+        toolchain_print_succeed_info
+    else
+        toolchain_print_fail_info
+    fi
+
+    toolchain_sanity_reset
+}
