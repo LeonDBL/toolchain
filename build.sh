@@ -49,12 +49,14 @@ function toolchain_common_setup()
 #                                                                #
 ##################################################################
 
-# Set and clear destination
+# Set and clear destinations
 function toolchain_prepare_destination()
 {
+    BUILD_OBJ=$OUT/toolchain_obj
     DEST=$ANDROID_BUILD_TOP/prebuilts/gcc/linux-x86/arm/$TOOLCHAIN_TARGET-$TARGET_GCC_VERSION
+    rm -rf $BUILD_OBJ
     rm -rf $DEST
-    mkdir -p $OUT/toolchain_build
+    mkdir -p $BUILD_OBJ
 }
 
 # Set local paths
@@ -130,7 +132,7 @@ function toolchain_patch_binutils()
 # Configure for TOOLCHAIN_TARGET triplet
 function toolchain_configure()
 {
-    cd $OUT/toolchain_build
+    cd $BUILD_OBJ
     $SRC/build/configure --prefix="$DEST" \
         --with-mpc-version="$MPC" \
         --with-gdb-version="$GDB" \
@@ -211,17 +213,12 @@ function toolchain_print_succeed_info()
     echo "\"development\""
     echo ""
     echo "2) We use $OUT for toolchain building due to some"
-    echo "build configurations using multiple drives or partitions."
+    echo "build configurations using paths other than"
+    echo "$ANDROID_BUILD_TOP/out."
     echo ""
-    echo "3) We have the entire toolchain_build folder in a"
-    echo "cleanspec, so there's no need to delete it ourselves."
-    echo "This means if you do not make clean, no new toolchain is"
-    echo "built (or fully built)."
-    echo ""
-    echo "4) The toolchain build uses your *HOST* sysroot."
-    echo "If you don't know what this means don't worry."
-    echo "If you do know what this means, we did it this way"
-    echo "to rid your build system of unnecessary symlinks"
+    echo "3) You may build the toolchain for a full target of your"
+    echo "choosing by running your target as the toolchain_build"
+    echo "argument."
     echo "=========================================================="
 }
 
