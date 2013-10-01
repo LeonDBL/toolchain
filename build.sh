@@ -166,6 +166,40 @@ function toolchain_make_install()
     make install
 }
 
+# Build libgccunwind
+function toolchain_make_arm_libgccunwind()
+{
+    local GCC_BUILD_OBJ_PREFIX="$BUILD_OBJ/gcc-$GCC/$TOOLCHAIN_TARGET"
+    local ARM_OBJ_PATH="$GCC_BUILD_OBJ_PREFIX/libgcc"
+    local ARM_THUMB_OBJ_PATH="$GCC_BUILD_OBJ_PREFIX/thumb/libgcc"
+    local ARM_V7A_OBJ_PATH="$GCC_BUILD_OBJ_PREFIX/armv7-a/libgcc"
+    local ARM_V7A_THUMB_OBJ_PATH="$GCC_BUILD_OBJ_PREFIX/armv7-a/thumb/libgcc"
+    local UNWIND_TARGET_PREFIX="$DEST/lib/gcc/$TOOLCHAIN_TARGET/$GCC"
+    local ARM_OBJS ARM_THUMB_OBJS ARM_V7A_OBJS ARM_V7A_THUMB_OBJS
+
+    for OBJ in unwind-arm.o libunwind.o pr-support.o unwind-c.o; do
+        ARM_OBJS=$ARM_OBJ_PATH/$OBJ
+    done
+
+    for OBJ in unwind-arm.o libunwind.o pr-support.o unwind-c.o; do
+        ARM_THUMB_OBJS=$ARM_THUMB_OBJ_PATH/$OBJ
+    done
+
+    for OBJ in unwind-arm.o libunwind.o pr-support.o unwind-c.o; do
+        ARM__V7A_OBJS=$ARM_V7A_OBJ_PATH/$OBJ
+    done
+
+    for OBJ in unwind-arm.o libunwind.o pr-support.o unwind-c.o; do
+        ARM_V7A_THUMB_OBJS=$ARM_V7A_THUMB_OBJ_PATH/$OBJ
+    done
+
+    ar crs $UNWIND_TARGET_PREFIX/libgccunwind.a $ARM_OBJS
+    ar crs $UNWIND_TARGET_PREFIX/thumb/libgccunwind.a $ARM_THUMB_OBJS
+    ar crs $UNWIND_TARGET_PREFIX/armv7-a/libgccunwind.a $ARM_V7A_OBJS
+    ar crs $UNWIND_TARGET_PREFIX/armv7-a/thumb/libgccunwind.a \
+    $ARM_V7A_THUMB_OBJS
+}
+
 
 ##################################################################
 #                                                                #
@@ -265,6 +299,9 @@ function toolchain_build()
     toolchain_patch_binutils
     toolchain_configure
     toolchain_make_install
+    if [ "$TOOLCHAIN_TARGET" = "arm-linux-androideabi" ]; then
+        toolchain_make_arm_libgccunwind
+    fi
     toolchain_copy_makefiles
 
     if $DEST/bin/$TOOLCHAIN_TARGET-gcc --version > /dev/null; then
