@@ -30,8 +30,6 @@ function toolchain_common_setup()
     [ -z "$SMP" ] && SMP="-j`getconf _NPROCESSORS_ONLN`"
 
     # Set cpu variant to be used in configure
-    # XXX: only applicable to ARM currently due to one
-    # supported target triplet
     cpu_variant="$TARGET_CPU_VARIANT"
     if [ "$cpu_variant" = "krait" ]; then
        tune_variant=cortex-a9
@@ -54,8 +52,7 @@ function toolchain_common_setup()
 # Set and clear destination
 function toolchain_prepare_destination()
 {
-    # TODO: support more triplets
-    DEST=$ANDROID_BUILD_TOP/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-$TARGET_GCC_VERSION
+    DEST=$ANDROID_BUILD_TOP/prebuilts/gcc/linux-x86/arm/$TOOLCHAIN_TARGET-$TARGET_GCC_VERSION
     rm -rf $DEST
     mkdir -p $OUT/toolchain_build
 }
@@ -130,8 +127,8 @@ function toolchain_patch_binutils()
 #                                                                #
 ##################################################################
 
-# Configure for arm-linux-androideabi triplet
-function toolchain_configure_arm-linux-androideabi()
+# Configure for TOOLCHAIN_TARGET triplet
+function toolchain_configure()
 {
     cd $OUT/toolchain_build
     $SRC/build/configure --prefix="$DEST" \
@@ -148,7 +145,7 @@ function toolchain_configure_arm-linux-androideabi()
         --with-headers="$BIONIC_LIBC"/include \
         --with-headers="$BIONIC_LIBC"/arch-arm/include \
         --with-tune="$tune_variant" \
-        --target=arm-linux-androideabi \
+        --target="$TOOLCHAIN_TARGET" \
         --enable-graphite=yes \
         --disable-libsanitizer
 }
@@ -187,7 +184,7 @@ function toolchain_print_succeed_info()
 {
     echo ""
     echo "=========================================================="
-    echo "Toolchain build successful."
+    echo "$TOOLCHAIN_TARGET toolchain build successful."
     echo "The toolchain can be found in $DEST."
     echo "Now building Android with cfX-Toolchain."
     echo "=========================================================="
@@ -233,7 +230,7 @@ function toolchain_print_fail_info()
 {
     echo ""
     echo "=========================================================="
-    echo "Toolchain build failed!"
+    echo "$TOOLCHAIN_TARGET toolchain build failed!"
     echo "Please check scrollback for the issue."
     echo "If needed, please mail the log to \"synergye (at) codefi.re\"."
     echo "=========================================================="
@@ -258,9 +255,10 @@ function toolchain_sanity_reset()
 #                                                                #
 ##################################################################
 
-# Build for arm-linux-androideabi
-function toolchain_build_arm-linux-androideabi()
+# Fully build TOOLCHAIN_TARGET triplet
+function toolchain_build()
 {
+    TOOLCHAIN_TARGET=$1
     toolchain_set_component_versions
     toolchain_common_setup
     toolchain_prepare_destination
@@ -268,11 +266,11 @@ function toolchain_build_arm-linux-androideabi()
     toolchain_set_common_paths
     toolchain_dependency_resolution
     toolchain_patch_binutils
-    toolchain_configure_arm-linux-androideabi
+    toolchain_configure
     toolchain_make_install
     toolchain_copy_makefiles
 
-    if $DEST/bin/arm-linux-androideabi-gcc --version > /dev/null; then
+    if $DEST/bin/$TOOLCHAIN_TARGET-gcc --version > /dev/null; then
         toolchain_print_succeed_info
     else
         toolchain_print_fail_info
