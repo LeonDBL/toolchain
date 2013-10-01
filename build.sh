@@ -301,8 +301,8 @@ function toolchain_build()
     toolchain_make_install
     if [ "$TOOLCHAIN_TARGET" = "arm-linux-androideabi" ]; then
         toolchain_make_arm_libgccunwind
+        toolchain_copy_makefiles
     fi
-    toolchain_copy_makefiles
 
     if $DEST/bin/$TOOLCHAIN_TARGET-gcc --version > /dev/null; then
         toolchain_print_succeed_info
