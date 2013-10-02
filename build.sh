@@ -282,7 +282,7 @@ function toolchain_sanity_reset()
 
 ##################################################################
 #                                                                #
-#                  Full Triplet Build Functions                  #
+#                        Build Functions                         #
 #                                                                #
 ##################################################################
 
@@ -311,4 +311,64 @@ function toolchain_build()
     fi
 
     toolchain_sanity_reset
+}
+
+
+##################################################################
+#                                                                #
+#                      Packaging Functions                       #
+#                                                                #
+##################################################################
+
+function toolchain_destination_tar()
+{
+    if [ ! $COMP_OPTS ]; then
+        COMP_OPTS=cjf
+    fi
+    tar -$COMP_OPTS $1 $DEST
+}
+
+function toolchain_package()
+{
+    FILENAME=$2
+
+    while getopts o:p: opt; do
+        case $opt in
+            o) COMP_OPTS=$OPTARG
+                ;;
+            p) PACK_PATH=$OPTARG
+                ;;
+        esac
+    done
+
+    if [ ! $FILENAME ]; then
+        FILENAME=cfX-$GCC-$TOOLCHAIN_TARGET-toolchain.$(date +%Y%m%d).tar.bz2
+    fi
+
+    if [ ! $1 ]; then
+        echo "Error: You must specify a toolchain target"
+        echo "Usage: toolchain_package [TOOLCHAIN_TARGET] [OPTIONAL: FILENAME]"
+        echo ""
+        echo "Running \"toolchain_package arm-linux-androideabi\" would package"
+        echo "the freshly built toolchain to your current directory."
+        echo "If non-existent, it will build prior to packaging."
+        echo ""
+        echo "Additional flags:"
+        echo "  -o, modify \"tar\" compatible compression options"
+        echo "      i.e. cjf"
+        echo ""
+        echo "  -p, specify a new package path"
+        echo "      a specified filename is still optional"
+        echo ""
+    else
+        if [ $1 != $TOOLCHAIN_TARGET ]; then
+            toolchain_build $1
+        fi
+
+        if [ $PACK_PATH ]; then
+            toolchain_destination_tar $PACK_PATH/$FILENAME
+        else
+            toolchain_destination_tar $FILENAME
+        fi
+    fi
 }
