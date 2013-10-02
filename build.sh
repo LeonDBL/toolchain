@@ -39,7 +39,9 @@ function toolchain_common_setup()
 
     # Set locales to avoid python warnings
     # or errors depending on configuration
-    export LC_ALL=C
+    if [ ! $LC_ALL ]; then
+        export LC_ALL=C
+    fi
 }
 
 
