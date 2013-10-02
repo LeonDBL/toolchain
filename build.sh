@@ -36,12 +36,6 @@ function toolchain_common_setup()
     else
        tune_variant="$TARGET_CPU_VARIANT"
     fi
-
-    # Set locales to avoid python warnings
-    # or errors depending on configuration
-    if [ ! $LC_ALL ]; then
-        export LC_ALL=C
-    fi
 }
 
 
