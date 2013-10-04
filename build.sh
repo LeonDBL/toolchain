@@ -27,7 +27,11 @@ function toolchain_common_setup()
     export GCC_SOURCE_VER=$GCC
 
     # Parallel build flag passed to make
-    [ -z "$SMP" ] && SMP="-j`getconf _NPROCESSORS_ONLN`"
+    if [ -e /proc/cpuinfo ]; then
+        SMP="-j`cat /proc/cpuinfo | grep processor | wc -l`"
+    else
+        SMP="-j1"
+    fi
 
     # Set cpu variant to be used in configure
     cpu_variant="$TARGET_CPU_VARIANT"
