@@ -216,7 +216,7 @@ function toolchain_copy_makefiles()
 }
 
 # Print completion info
-function toolchain_print_succeed_info()
+function toolchain_build_print_succeed_info()
 {
     echo ""
     echo "=========================================================="
@@ -257,7 +257,7 @@ function toolchain_print_succeed_info()
 }
 
 # Print failure info
-function toolchain_print_fail_info()
+function toolchain_build_print_fail_info()
 {
     echo ""
     echo "=========================================================="
@@ -305,9 +305,11 @@ function toolchain_build()
     fi
 
     if $DEST/bin/$TOOLCHAIN_TARGET-gcc --version > /dev/null; then
-        toolchain_print_succeed_info
+        if [ ! $TOOLCHAIN_PACKAGE ]; then
+            toolchain_build_print_succeed_info
+        fi
     else
-        toolchain_print_fail_info
+        toolchain_build_print_fail_info
     fi
 
     toolchain_sanity_reset
@@ -320,6 +322,20 @@ function toolchain_build()
 #                                                                #
 ##################################################################
 
+function toolchain_package_print_info()
+{
+    echo ""
+    echo "=========================================================="
+    if [ $PACK_PATH ]; then
+        echo "$PACK_PATH/$FILENAME packaging has completed"
+    else
+        echo "$FILENAME packaging has completed!"
+    fi
+    echo "If distributed, please give credit back to us."
+    echo "Thank you very much!"
+    echo "=========================================================="
+}
+
 function toolchain_destination_tar()
 {
     if [ ! $COMP_OPTS ]; then
@@ -331,6 +347,7 @@ function toolchain_destination_tar()
 function toolchain_package()
 {
     FILENAME=$2
+    export TOOLCHAIN_PACKAGE=true
 
     while getopts o:p: opt; do
         case $opt in
@@ -370,5 +387,6 @@ function toolchain_package()
         else
             toolchain_destination_tar $FILENAME
         fi
+        toolchain_package_print_info
     fi
 }
