@@ -389,4 +389,5 @@ function toolchain_package()
         fi
         toolchain_package_print_info
     fi
+    unset TOOLCHAIN_PACKAGE
 }
