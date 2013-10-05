@@ -341,7 +341,7 @@ function toolchain_destination_tar()
     if [ ! $COMP_OPTS ]; then
         COMP_OPTS=cjf
     fi
-    tar -$COMP_OPTS $1 -C $DEST
+    tar -$COMP_OPTS $1 -C $DEST .
 }
 
 function toolchain_package()
