@@ -342,7 +342,7 @@ function toolchain_package()
     done
 
     if [ ! $FILENAME ]; then
-        FILENAME=cfX-$GCC-$TOOLCHAIN_TARGET-toolchain.$(date +%Y%m%d).tar.bz2
+        FILENAME=cfX-$GCC-$1-toolchain.$(date +%Y%m%d).tar.bz2
     fi
 
     if [ ! $1 ]; then
