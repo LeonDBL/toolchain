@@ -211,8 +211,14 @@ function toolchain_make_arm_libgccunwind()
 function toolchain_copy_makefiles()
 {
     cp $DIR/Makefiles/Android.mk $DEST/Android.mk
-    cp $DIR/Makefiles/toolchain.mk $DEST/toolchain.mk
-    cp $DIR/Makefiles/lib32-Android.mk $DEST/lib32/Android.mk
+    if [ $TOOLCHAIN_PACKAGE ]; then
+        cp $DIR/Makefiles/toolchain-package.mk $DEST/toolchain.mk
+        cp $DIR/Makefiles/lib32-Android-package.mk $DEST/lib32/Android.mk
+    else
+        cp $DIR/Makefiles/toolchain.mk $DEST/toolchain.mk
+        cp $DIR/Makefiles/lib32-Android.mk $DEST/lib32/Android.mk
+    fi
+
 }
 
 # Print completion info
