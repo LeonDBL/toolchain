@@ -96,6 +96,7 @@ function toolchain_set_common_paths()
 function toolchain_dependency_resolution()
 {
     if ! makeinfo --version > /dev/null; then
+        cd $BUILD_OBJ
         $SRC/texinfo/configure \
             --prefix=$DEP_BIN \
             --exec_prefix=$DEP_BIN
