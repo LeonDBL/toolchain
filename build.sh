@@ -10,7 +10,7 @@
 function toolchain_set_component_versions()
 {
     [ -z "$BINUTILS" ] && BINUTILS=upstream
-    [ -z "$CLOOG" ] && CLOOG=0.18.0
+    [ -z "$CLOOG" ] && CLOOG=0.18.1
     [ -z "$PPL" ] && PPL=1.0
     [ -z "$GCC" ] && GCC=4.8
     [ -z "$GDB" ] && GDB=linaro-7.6-2013.05
