@@ -219,7 +219,13 @@ function toolchain_copy_makefiles()
         cp $DIR/Makefiles/toolchain.mk $DEST/toolchain.mk
         cp $DIR/Makefiles/lib32-Android.mk $DEST/lib32/Android.mk
     fi
+}
 
+# Copy prebuilts such as custom GNU gold linker
+function toolchain_copy_prebuilts()
+{
+    cp -f $DIR/prebuilts/ld $DEST/$TOOLCHAIN_TARGET/bin/ld
+    cp -f $DIR/prebuilts/ld $DEST/bin/$TOOLCHAIN_TARGET-ld
 }
 
 # Print completion info
@@ -310,7 +316,7 @@ function toolchain_build()
         toolchain_make_arm_libgccunwind
         toolchain_copy_makefiles
     fi
-
+    toolchain_copy_prebuilts
     if $DEST/bin/$TOOLCHAIN_TARGET-gcc --version > /dev/null; then
         if [ ! $TOOLCHAIN_PACKAGE ]; then
             toolchain_build_print_succeed_info
@@ -318,7 +324,6 @@ function toolchain_build()
     else
         toolchain_build_print_fail_info
     fi
-
     toolchain_sanity_reset
 }
 
