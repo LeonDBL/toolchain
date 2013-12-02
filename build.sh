@@ -208,19 +208,6 @@ function toolchain_make_arm_libgccunwind()
 #                                                                #
 ##################################################################
 
-# Copy makefiles into compiled destination
-function toolchain_copy_makefiles()
-{
-    cp $DIR/Makefiles/Android.mk $DEST/Android.mk
-    if [ $TOOLCHAIN_PACKAGE ]; then
-        cp $DIR/Makefiles/toolchain-package.mk $DEST/toolchain.mk
-        cp $DIR/Makefiles/lib32-Android-package.mk $DEST/lib32/Android.mk
-    else
-        cp $DIR/Makefiles/toolchain.mk $DEST/toolchain.mk
-        cp $DIR/Makefiles/lib32-Android.mk $DEST/lib32/Android.mk
-    fi
-}
-
 # Copy prebuilts such as custom GNU gold linker
 function toolchain_copy_prebuilts()
 {
@@ -314,7 +301,6 @@ function toolchain_build()
     toolchain_make_install
     if [ "$TOOLCHAIN_TARGET" = "arm-linux-androideabi" ]; then
         toolchain_make_arm_libgccunwind
-        toolchain_copy_makefiles
     fi
     toolchain_copy_prebuilts
     if $DEST/bin/$TOOLCHAIN_TARGET-gcc --version > /dev/null; then
