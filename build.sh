@@ -16,7 +16,7 @@ function toolchain_set_component_versions()
     [ -z "$GDB" ] && GDB=linaro-7.6-2013.05
     [ -z "$GMP" ] && GMP=5.1.2
     [ -z "$MPFR" ] && MPFR=3.1.2
-    [ -z "$MPC" ] && MPC=1.0.1
+    [ -z "$MPC" ] && MPC=1.0.2
 }
 
 # Set common variables used for the build
