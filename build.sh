@@ -14,7 +14,7 @@ function toolchain_set_component_versions()
     [ -z "$PPL" ] && PPL=1.0
     [ -z "$GCC" ] && GCC=4.8
     [ -z "$GDB" ] && GDB=linaro-7.6-2013.05
-    [ -z "$GMP" ] && GMP=5.1.2
+    [ -z "$GMP" ] && GMP=5.1.3
     [ -z "$MPFR" ] && MPFR=3.1.2
     [ -z "$MPC" ] && MPC=1.0.2
 }
