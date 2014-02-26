@@ -10,7 +10,8 @@
 function toolchain_set_component_versions()
 {
     [ -z "$BINUTILS" ] && BINUTILS=upstream
-    [ -z "$CLOOG" ] && CLOOG=0.18.1
+    [ -z "$CLOOG" ] && CLOOG=upstream
+    [ -z "$ISL" ] && ISL=upstream
     [ -z "$PPL" ] && PPL=1.0
     [ -z "$GCC" ] && GCC=4.8
     [ -z "$GDB" ] && GDB=linaro-7.6-2013.05
@@ -50,10 +51,8 @@ function toolchain_common_setup()
 ##################################################################
 
 # Set and clear destinations
-function toolchain_prepare_destination()
+function toolchain_prepare_obj()
 {
-    BUILD_OBJ=$OUT/toolchain_obj
-    DEST=$ANDROID_BUILD_TOP/prebuilts/gcc/linux-x86/arm/$TOOLCHAIN_TARGET-$TARGET_GCC_VERSION
     rm -rf $BUILD_OBJ
     rm -rf $DEST
     mkdir -p $BUILD_OBJ
@@ -62,6 +61,8 @@ function toolchain_prepare_destination()
 # Set local paths
 function toolchain_set_local_paths()
 {
+    BUILD_OBJ=$OUT/toolchain_obj
+    DEST=$ANDROID_BUILD_TOP/prebuilts/gcc/linux-x86/arm/$TOOLCHAIN_TARGET-$TARGET_GCC_VERSION
     BIONIC_LIBC="$ANDROID_BUILD_TOP/bionic/libc"
     DEP_BIN="$DIR/bin"
     DIR="$ANDROID_BUILD_TOP/toolchain"
@@ -92,7 +93,7 @@ function toolchain_set_common_paths()
 # Check that the user has makeinfo or texinfo installed
 # before proceeding. If not, then build texinfo from source.
 # texinfo will be installed to $DEP_BIN
-# TODO: add dependency checking for patch and make.
+# TODO: add dependency checking for patch
 function toolchain_dependency_resolution()
 {
     if ! makeinfo --version > /dev/null; then
@@ -279,6 +280,11 @@ function toolchain_sanity_reset()
     cd $ANDROID_BUILD_TOP
 }
 
+function toolchain_path_restore()
+{
+    export PATH=$NEWPATH
+    cd $ANDROID_BUILD_TOP
+}
 
 ##################################################################
 #                                                                #
@@ -292,7 +298,7 @@ function toolchain_build()
     TOOLCHAIN_TARGET=$1
     toolchain_set_component_versions
     toolchain_common_setup
-    toolchain_prepare_destination
+    toolchain_prepare_obj
     toolchain_set_local_paths
     toolchain_set_common_paths
     toolchain_dependency_resolution
@@ -311,6 +317,56 @@ function toolchain_build()
         toolchain_build_print_fail_info
     fi
     toolchain_sanity_reset
+    toolchain_path_restore
+}
+
+
+
+##################################################################
+#                                                                #
+#                         Cloog and ISL                          #
+#                                                                #
+##################################################################
+
+# Make sure the user knows what they're getting into
+function cloogisl_build()
+{
+    echo -e "These two new packages will be installed to $CLOOGISL_DEST"
+    echo "THESE ARE NOT BEING INSTALLED AS SYSTEM PACKAGES."
+    echo "if you remove this path, this will need to be run again"
+    echo ""
+    echo "You must also lunch for your device prior to running"
+    read -p "I comprehend this message (y/n)?  " choice
+        case "$choice" in
+            y|Y|yes|Yes) run_cloogisl_build
+            ;;
+            n|N|no|No) echo "You must comprehend the prior message to proceed"
+            ;;
+        esac
+}
+
+# They understand, actually build and install
+function run_cloogisl_build()
+{
+    CLOOGISL_DEST="$ANDROID_BUILD_TOP/prebuilts/cloog/inline"
+    CLOOG_SRC="$SRC/cloog/cloog-$CLOOG"
+    if [ ! -d "$CLOOG_DEST" ]; then
+        mkdir -p $CLOOGISL_DEST
+    else
+        rm -rf $CLOOG_DEST/*
+    fi
+    toolchain_set_component_versions
+    toolchain_common_setup
+    toolchain_prepare_obj
+    toolchain_set_local_paths
+    toolchain_set_common_paths
+    cd $CLOOG_SRC
+    $CLOOG_SRC/isl/autogen.sh
+    $CLOOG_SRC/autogen.sh
+    cd $BUILD_OBJ
+    $SRC/cloog/cloog-$CLOOG/configure --prefix="$CLOOGISL_DEST"
+    toolchain_make_install
+    toolchain_path_restore
 }
 
 
