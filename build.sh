@@ -331,18 +331,26 @@ function toolchain_build()
 # Make sure the user knows what they're getting into
 function cloogisl_build()
 {
-    echo -e "These two new packages will be installed to $CLOOGISL_DEST"
-    echo "THESE ARE NOT BEING INSTALLED AS SYSTEM PACKAGES."
-    echo "if you remove this path, this will need to be run again"
-    echo ""
-    echo "You must also lunch for your device prior to running"
-    read -p "I comprehend this message (y/n)?  " choice
-        case "$choice" in
-            y|Y|yes|Yes) run_cloogisl_build
-            ;;
-            n|N|no|No) echo "You must comprehend the prior message to proceed"
-            ;;
-        esac
+    if ! autoconf --version > /dev/null; then
+        echo "ERROR: Must have autoconf installed!"
+    else
+        if ! libtool --version > /dev/null; then
+            echo "ERROR: Must have libtool installed!"
+        else
+            echo -e "These two new packages will be installed to $CLOOGISL_DEST"
+            echo "THESE ARE NOT BEING INSTALLED AS SYSTEM PACKAGES."
+            echo "if you remove this path, this will need to be run again"
+            echo ""
+            echo "You must also lunch for your device prior to running"
+            read -p "I comprehend this message (y/n)?  " choice
+                case "$choice" in
+                    y|Y|yes|Yes) run_cloogisl_build
+                    ;;
+                    n|N|no|No) echo "You must comprehend the prior message to proceed"
+                    ;;
+                esac
+        fi
+    fi
 }
 
 # They understand, actually build and install
