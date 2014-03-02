@@ -357,6 +357,10 @@ function cloogisl_build()
 function run_cloogisl_build()
 {
     toolchain_set_component_versions
+    toolchain_common_setup
+    toolchain_prepare_obj
+    toolchain_set_local_paths
+    toolchain_set_common_paths
     CLOOGISL_DEST="$ANDROID_BUILD_TOP/prebuilts/cloog/inline"
     CLOOG_SRC="$SRC/cloog/cloog-$CLOOG"
     if [ ! -d "$CLOOG_DEST" ]; then
@@ -364,10 +368,6 @@ function run_cloogisl_build()
     else
         rm -rf $CLOOG_DEST/*
     fi
-    toolchain_common_setup
-    toolchain_prepare_obj
-    toolchain_set_local_paths
-    toolchain_set_common_paths
     cd $CLOOG_SRC
     $CLOOG_SRC/isl/autogen.sh
     $CLOOG_SRC/autogen.sh
